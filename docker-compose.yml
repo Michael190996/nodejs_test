@@ -1,0 +1,49 @@
+version: "3.3"
+
+services:
+  back:
+    build: services/back
+    env_file:
+      - ./.env
+    depends_on:
+      - users
+      - balance
+    volumes:
+      - .env:/workspace/.env
+      
+  users:
+    build: services/users
+    env_file:
+      - ./.env
+    depends_on:
+      - db
+    volumes:
+      - .env:/workspace/.env
+      
+  balance:
+    build: services/balance
+    volumes:
+      - .env:/workspace/.env
+    env_file:
+      - ./.env
+    depends_on:
+      - db
+
+  nginx:
+    image: nginx
+    ports:
+     - ${DOCKER_VIEW}:80
+    env_file:
+      - ./.env
+    depends_on:
+      - back
+    volumes:
+      - "./nginx:/home_nginx"
+    command: sh /home_nginx/run_nginx.sh
+
+  db:
+    image: mongo
+    env_file:
+      - ./.env
+    ports:
+      - "27017:27017"

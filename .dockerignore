@@ -1,0 +1,8 @@
+node_modules/*
+public/*
+nginx/*
+data/*
+.idea/*
+.git/*
+db/postgress/data/*
+.gitignore
