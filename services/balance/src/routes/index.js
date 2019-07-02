@@ -15,7 +15,7 @@ router.get('/balance/:id', async (ctx) => {
 
 router.post('/balance/save/:id', async (ctx) => {
     const {id: ID} = ctx.params;
-    const {summary: SUMMARY} = ctx.body;
+    const {summary: SUMMARY} = ctx.request.body;
 
     const balance = new Balance({
         id: ID,

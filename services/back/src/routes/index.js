@@ -11,6 +11,10 @@ router.get('/users/:id', async (ctx) => {
         Balance.getById(ID)
     ]);
 
+    console.log(
+        USER, BALANCE
+    )
+
     ctx.body = {
         id: ID,
         name: USER.name,
@@ -21,7 +25,9 @@ router.get('/users/:id', async (ctx) => {
 
 router.post('/users/save/:id', async (ctx) => {
     const {id: ID} = ctx.params;
-    const {name: NAME, age: AGE, summary: SUMMARY} = ctx.body;
+    const {name: NAME, age: AGE, summary: SUMMARY} = ctx.request.body;
+
+    console.log(ctx.query, ctx.request.body)
 
     await Promise.all([
         Users.save(ID, NAME, AGE),

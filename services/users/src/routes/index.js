@@ -15,7 +15,9 @@ router.get('/users/:id', async (ctx) => {
 
 router.post('/users/save/:id', async (ctx) => {
     const {id: ID} = ctx.params;
-    const {name: NAME, age: AGE} = ctx.body;
+    const {name: NAME, age: AGE} = ctx.request.body;
+
+    console.log(ctx.request.body)
 
     const user = new Users({
         id: ID,
