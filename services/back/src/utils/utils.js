@@ -28,19 +28,21 @@ export default {
             hash: HASH
         }));
 
+        const timer = setTimeout(() => deffered.reject(), 10000);     
+        
         const listener = (data) => {
             const {hash, body} = JSON.parse(data);
 
             if (hash === HASH) {
                 deffered.resolve(body);
+                clearTimeout(timer);
             }
         };
 
         client.on('data', listener);
-
+        
         deffered.promise.finally(() => client.removeListener('data', listener));
 
-        setTimeout(() => deffered.reject(), 10000);
 
         return deffered.promise;
     }
