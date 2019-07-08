@@ -1,19 +1,30 @@
-import superagent from 'superagent';
+import net from 'net';
+import url from 'url';
 import config from '../config';
+import utils from '../utils/utils';
 
-export default class Users {
-    static getById(id) {
-        return superagent.get(`${config.BALANCE}/balance/${id}`)
-            .then(({body}) => body.data);
+class Balance {
+    constructor(api) {
+        const {
+            port: PORT,
+            hostname: HOSTNAME
+        } = url.parse(api);
+
+        this._client = net.connect(PORT, HOSTNAME);
+        this._client.on('error', console.error);
     }
 
-    static save(id, summary) {
-        return superagent.post(`${config.BALANCE}/balance/save/${id}`)
-            .send({summary})
-            .set('accept', 'json');
+    getById(id) {
+        return utils.asyncEmitSocket('balance', {id}, this._client);
     }
 
-    static delete(id) {
-        return superagent.post(`${config.BALANCE}/balance/delete/${id}`);
+    save(id, summary) {
+        return utils.asyncEmitSocket('save', {id, summary}, this._client);
+    }
+
+    delete(id) {
+        return utils.asyncEmitSocket('delete', {id}, this._client);
     }
 }
+
+export default new Balance(config.BALANCE);

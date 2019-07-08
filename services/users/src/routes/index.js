@@ -1,43 +1,29 @@
-import KoaRouter from 'koa-router';
+import {EventEmitter} from 'events';
 import {Users} from '../models';
 
-const router = new KoaRouter();
+export default function (socket) {
+    const router = new EventEmitter();
 
-router.get('/users/:id', async (ctx) => {
-    const {id: ID} = ctx.params;
-
-    ctx.body = await Users.findOne({
-        id: ID
+    router.on('users', async (hash, {id}) => {
+        socket.write(JSON.stringify({
+            hash,
+            body: await Users.findOne({id})
+        }));
     });
 
-    ctx.assert(ctx.body, 500, 'user of undefined');
-});
+    router.on('users', async (hash, {id, name, age}) => {
+        const user = new Users({id, age, name});
 
-router.post('/users/save/:id', async (ctx) => {
-    const {id: ID} = ctx.params;
-    const {name: NAME, age: AGE} = ctx.request.body;
+        await user.save();
 
-    console.log(ctx.request.body)
-
-    const user = new Users({
-        id: ID,
-        age: AGE,
-        name: NAME
+        socket.write(JSON.stringify({hash}));
     });
 
-    await user.save();
+    router.on('delete', async (hash, {id}) => {
+        await Users.delete({id});
 
-    ctx.body = {};
-});
-
-router.post('/users/delete/:id', async (ctx) => {
-    const {id: ID} = ctx.params;
-
-    await Users.delete({
-        id: ID
+        socket.write(JSON.stringify({hash}));
     });
 
-    ctx.body = {};
-});
-
-export default router;
+    return router;
+}

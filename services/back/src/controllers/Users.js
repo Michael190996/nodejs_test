@@ -1,19 +1,30 @@
+import net from 'net';
+import url from 'url';
 import config from '../config';
-import superagent from 'superagent';
+import utils from '../utils/utils';
 
-export default class Users {
-    static getById(id) {
-        return superagent.get(`${config.USERS}/users/${id}`)
-            .then(({body}) => body.data);
+class Users {
+    constructor(api) {
+        const {
+            port: PORT,
+            hostname: HOSTNAME
+        } = url.parse(api);
+
+        this._client = net.connect(PORT, HOSTNAME);
+        this._client.on('error', console.error);
     }
 
-    static save(id, name, age) {
-        return superagent.post(`${config.USERS}/users/save/${id}`)
-            .send({name, age})
-            .set('accept', 'json');
+    getById(id) {
+        return utils.asyncEmitSocket('users', {id}, this._client);
     }
 
-    static delete(id) {
-        return superagent.post(`${config.USERS}/users/delete/${id}`);
+    save(id, name, age) {
+        return utils.asyncEmitSocket('save', {id, name, age}, this._client);
+    }
+
+    delete(id) {
+        return utils.asyncEmitSocket('delete', {id}, this._client);
     }
 }
+
+export default new Users(config.USERS);

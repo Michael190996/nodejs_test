@@ -1,40 +1,31 @@
-import KoaRouter from 'koa-router';
+import {EventEmitter} from 'events';
 import {Balance} from '../models';
 
-const router = new KoaRouter();
+export default function (socket) {
+    const router = new EventEmitter();
 
-router.get('/balance/:id', async (ctx) => {
-    const {id: ID} = ctx.params;
-
-    ctx.body = await Balance.findOne({
-        id: ID
+    router.on('balance', async (hash, {id}) => {
+        socket.write(JSON.stringify({
+            hash,
+            body: {balance:5}
+        }));
     });
 
-    ctx.assert(ctx.body, 500, 'balance of undefined');
-});
+    router.on('save', async (hash, {id, summary}) => {
+        const balance = new Balance({
+            id, summary
+        });
 
-router.post('/balance/save/:id', async (ctx) => {
-    const {id: ID} = ctx.params;
-    const {summary: SUMMARY} = ctx.request.body;
+        await balance.save();
 
-    const balance = new Balance({
-        id: ID,
-        summary: SUMMARY
+        socket.write(JSON.stringify({hash}));
     });
 
-    await balance.save();
+    router.on('delete', async (hash, {id}) => {
+        await Balance.delete({id});
 
-    ctx.body = {};
-});
-
-router.post('/balance/delete/:id', async (ctx) => {
-    const {id: ID} = ctx.params;
-
-    await Balance.delete({
-        id: ID
+        socket.write(JSON.stringify({hash}));
     });
 
-    ctx.body = {};
-});
-
-export default router;
+    return router;
+}

@@ -1,19 +1,22 @@
-import Koa from 'koa';
 import url from 'url';
-import koaLogger from 'koa-logger';
-import koaRes from 'koa-res';
-import koaBodyparser from 'koa-bodyparser';
+import net from 'net';
 import config from './config';
-import router from './routes';
+import routes from './routes';
 
-const koa = new Koa();
+const server = net.createServer((socket) => {
+    const events = routes(socket);
 
-koa
-    .use(koaRes())
-    .use(koaLogger())
-    .use(koaBodyparser())
-    .use(router.routes())
-    .use(router.allowedMethods());
+    socket.on('data', (data) => {
+        const {hash: HASH, name: NAME, data: DATA} = JSON.parse(data);
+        events.emit(NAME, HASH, DATA);
+    });
+
+    socket.on('error', console.error);
+});
+
+server.on('error', (err) => {
+    throw err
+});
 
 const {
     port: PORT,
@@ -21,6 +24,6 @@ const {
     href: HREF
 } = url.parse(config.API);
 
-koa.listen(PORT, HOSTNAME, () => {
+server.listen(PORT, HOSTNAME, () => {
     console.log('App server start at ' + HREF);
 });

@@ -11,10 +11,6 @@ router.get('/users/:id', async (ctx) => {
         Balance.getById(ID)
     ]);
 
-    console.log(
-        USER, BALANCE
-    )
-
     ctx.body = {
         id: ID,
         name: USER.name,
